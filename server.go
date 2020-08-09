@@ -58,15 +58,18 @@ func (p *server) serve(lis *kcp.Listener) {
 		conn.SetStreamMode(true)
 		conn.SetWriteDelay(false)
 		conn.SetNoDelay(1, 10, 2, 1)
-
 		conn.SetMtu(1300)
+		conn.SetWindowSize(512, 2048)
+		conn.SetACKNoDelay(true)
 
 		go p.handleMux(conn)
 	}
 }
 
 func (p *server) handleMux(conn net.Conn) {
-	mux, err := smux.Server(conn, smux.DefaultConfig())
+	smuxConfig := smux.DefaultConfig()
+	smuxConfig.MaxReceiveBuffer = 4194304 * 2
+	mux, err := smux.Server(conn, smuxConfig)
 	if err != nil {
 		return
 	}

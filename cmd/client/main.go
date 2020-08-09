@@ -14,7 +14,7 @@ import (
 var confFile = flag.String("c", "stclient.json", "config file")
 
 func main() {
-	logconfig.InitLogrus("stclient", 10, logrus.InfoLevel)
+	logconfig.InitLogrus("stclient", 10, logrus.ErrorLevel)
 
 	flag.Parse()
 
