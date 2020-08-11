@@ -38,7 +38,7 @@ func newServer(cfg SConfig) *server {
 }
 
 func (p *server) Run() error {
-	lis, err := kcp.ListenWithOptions(p.cfg.Listen, nil, 10, 3)
+	lis, err := kcp.ListenWithOptions(p.cfg.Listen, nil, 30, 15)
 	if err != nil {
 		return err
 	}
@@ -57,10 +57,10 @@ func (p *server) serve(lis *kcp.Listener) {
 		}
 		conn.SetStreamMode(true)
 		conn.SetWriteDelay(false)
-		conn.SetNoDelay(1, 10, 2, 1)
-		conn.SetMtu(1300)
-		conn.SetWindowSize(512, 2048)
-		conn.SetACKNoDelay(true)
+		conn.SetNoDelay(0, 20, 2, 1)
+		conn.SetMtu(1200)
+		conn.SetWindowSize(2048, 256)
+		conn.SetACKNoDelay(false)
 
 		go p.handleMux(conn)
 	}
@@ -68,7 +68,7 @@ func (p *server) serve(lis *kcp.Listener) {
 
 func (p *server) handleMux(conn net.Conn) {
 	smuxConfig := smux.DefaultConfig()
-	smuxConfig.MaxReceiveBuffer = 4194304 * 2
+	//smuxConfig.MaxReceiveBuffer = 4194304 * 2
 	mux, err := smux.Server(conn, smuxConfig)
 	if err != nil {
 		return

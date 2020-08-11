@@ -3,7 +3,6 @@ package stunnel
 import (
 	"bytes"
 	"crypto/cipher"
-	"errors"
 	"io"
 )
 
@@ -83,8 +82,9 @@ func (w *cipherWriter) ReadFrom(r io.Reader) (n int64, err error) {
 type cipherReader struct {
 	io.Reader
 	cipher.AEAD
-	nonce []byte
-	buf   []byte
+	nonce    []byte
+	buf      []byte
+	leftover []byte
 }
 
 func newChipherReader(r io.Reader, aead cipher.AEAD) *cipherReader {
@@ -97,10 +97,16 @@ func newChipherReader(r io.Reader, aead cipher.AEAD) *cipherReader {
 }
 
 func (r *cipherReader) Read(b []byte) (int, error) {
+	if len(r.leftover) > 0 {
+		n := copy(b, r.leftover)
+		r.leftover = r.leftover[n:]
+		return n, nil
+	}
+
 	n, err := r.read()
 	m := copy(b, r.buf[:n])
 	if m < n {
-		return m, errors.New("cipherReader read m<n")
+		r.leftover = r.buf[m:n]
 	}
 	return m, err
 }

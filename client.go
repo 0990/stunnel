@@ -75,16 +75,16 @@ func (p *client) waitConn() *smux.Session {
 }
 
 func (p *client) createConn() (*smux.Session, error) {
-	kcpconn, err := kcp.DialWithOptions(p.cfg.RemoteAddr, nil, 10, 3)
+	kcpconn, err := kcp.DialWithOptions(p.cfg.RemoteAddr, nil, 30, 15)
 	if err != nil {
 		return nil, err
 	}
 	kcpconn.SetStreamMode(true)
 	kcpconn.SetWriteDelay(false)
-	kcpconn.SetMtu(1300)
-	kcpconn.SetACKNoDelay(true)
-	kcpconn.SetNoDelay(1, 10, 2, 1)
-	kcpconn.SetWindowSize(512, 2048)
+	kcpconn.SetMtu(1200)
+	kcpconn.SetACKNoDelay(false)
+	kcpconn.SetNoDelay(0, 20, 2, 1)
+	kcpconn.SetWindowSize(256, 2048)
 
 	if err := kcpconn.SetDSCP(46); err != nil {
 		log.Println("SetDSCP:", err)
@@ -97,7 +97,7 @@ func (p *client) createConn() (*smux.Session, error) {
 	}
 
 	smuxConfig := smux.DefaultConfig()
-	smuxConfig.MaxReceiveBuffer = 4194304 * 2
+	//smuxConfig.MaxReceiveBuffer = 4194304
 
 	if err := smux.VerifyConfig(smuxConfig); err != nil {
 		log.Fatalf("%+v", err)
