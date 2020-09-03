@@ -3,17 +3,18 @@ package crypto
 import (
 	"bytes"
 	"fmt"
+	"github.com/0990/stunnel/util"
 	"testing"
 )
 
 func Test_Cipher(t *testing.T) {
-	ahead, err := createAesGcmAEAD(kdf("xujialong", 32))
+
+	ahead, err := util.CreateAesGcmAead(util.StringToAesKey("abcd", 32))
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	data := []byte{1, 2, 3}
-	//in := bytes.NewBuffer(data)
 
 	rw := &ReadWriter{buf: make([]byte, 100)}
 
@@ -23,8 +24,6 @@ func Test_Cipher(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	fmt.Println(rw.buf)
 
 	//rw2 := &ReadWriter{buf: rw.buf}
 	c2 := NewConn(bytes.NewBuffer(rw.buf), ahead)

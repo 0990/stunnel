@@ -19,26 +19,22 @@ type client struct {
 }
 
 func New(typ string, cfg Config, aead cipher.AEAD) (*client, error) {
-	//aead, err := util.CreateAESGCMAEAD(util.KDF(cfg.AuthKey, 32))
-	//if err != nil {
-	//	panic(err)
-	//}
 	var newTun func() (tun.Tun, error)
 	var listen string
 	switch typ {
 	case "kcp":
 		newTun = func() (tun.Tun, error) {
-			return tun.NewKCPTun(cfg.KCP)
+			return newKCPTun(cfg.KCP)
 		}
 		listen = cfg.KCP.Listen
 	case "quic":
 		newTun = func() (tun.Tun, error) {
-			return tun.NewQUICTun(cfg.QUIC)
+			return newQUICTun(cfg.QUIC)
 		}
 		listen = cfg.QUIC.Listen
 	case "tcp":
 		newTun = func() (tun.Tun, error) {
-			return tun.NewTCPTun(cfg.TCP)
+			return newTCPTun(cfg.TCP)
 		}
 		listen = cfg.TCP.Listen
 	default:
@@ -67,12 +63,12 @@ func (p *client) waitCreateTun() tun.Tun {
 	for {
 		logrus.Info("creating conn....")
 		if conn, err := p.newTun(); err == nil {
+			logrus.Info("creating conn ok")
 			return conn
 		} else {
 			logrus.Println("re-connecting:", err)
 			time.Sleep(time.Second)
 		}
-		logrus.Info("creating conn ok")
 	}
 }
 

@@ -1,12 +1,17 @@
 package crypto
 
 import (
-	"bytes"
 	"crypto/cipher"
 	"io"
+	"math/rand"
+	"time"
 )
 
 const payloadSizeMask = 0x3FFF // 16*1024 - 1
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 type conn struct {
 	io.ReadWriter
@@ -17,8 +22,8 @@ type conn struct {
 func NewConn(rw io.ReadWriter, aead cipher.AEAD) io.ReadWriter {
 	return &conn{
 		ReadWriter: rw,
-		r:          newReader(rw, aead),
-		w:          newWriter(rw, aead),
+		r:          NewReader(rw, aead),
+		w:          NewWriter(rw, aead),
 	}
 }
 
@@ -37,7 +42,7 @@ type writer struct {
 	buf   []byte
 }
 
-func newWriter(w io.Writer, aead cipher.AEAD) *writer {
+func NewWriter(w io.Writer, aead cipher.AEAD) *writer {
 	return &writer{
 		Writer: w,
 		AEAD:   aead,
@@ -46,37 +51,47 @@ func newWriter(w io.Writer, aead cipher.AEAD) *writer {
 	}
 }
 
+func (w *writer) RandomNonce() {
+
+}
+
 func (w *writer) Write(b []byte) (int, error) {
-	n, err := w.ReadFrom(bytes.NewBuffer(b))
+	n, err := w.write(b)
 	return int(n), err
 }
 
-func (w *writer) ReadFrom(r io.Reader) (n int64, err error) {
-	for {
-		buf := w.buf
-		payloadBuf := buf[2+w.Overhead() : 2+w.Overhead()+payloadSizeMask]
-		nr, er := r.Read(payloadBuf)
-		if nr > 0 {
-			n += int64(nr)
-			buf = buf[:2+w.Overhead()+nr+w.Overhead()]
-			payloadBuf = payloadBuf[:nr]
-			buf[0], buf[1] = byte(nr>>8), byte(nr)
-			w.Seal(buf[:0], w.nonce, buf[:2], nil)
-			w.Seal(payloadBuf[:0], w.nonce, payloadBuf, nil)
-			_, ew := w.Writer.Write(buf)
-			if ew != nil {
-				err = ew
-				break
-			}
-		}
-		if er != nil {
-			if er != io.EOF {
-				err = er
-			}
-			break
-		}
+// nonce + payloadsize(encrypt)+ payload(encrypt)
+func (w *writer) write(b []byte) (n int64, err error) {
+	if len(b) == 0 {
+		return 0, nil
 	}
-	return n, err
+
+	//create new nonce
+	rand.Read(w.nonce)
+
+	buf := w.buf
+	sizeBuf := buf[w.NonceSize():]
+	payloadBuf := buf[2+w.Overhead()+w.NonceSize() : 2+w.Overhead()+w.NonceSize()+payloadSizeMask]
+	nr := len(b)
+	//copy(payloadBuf, b)
+
+	n += int64(nr)
+	buf = buf[:w.NonceSize()+2+w.Overhead()+nr+w.Overhead()]
+	//payloadBuf = payloadBuf[:nr]
+	sizeBuf[0], sizeBuf[1] = byte(nr>>8), byte(nr)
+
+	//nonce
+	copy(buf, w.nonce)
+	//payloadsize
+	w.Seal(sizeBuf[:0], w.nonce, sizeBuf[:2], nil)
+	//payload
+	w.Seal(payloadBuf[:0], w.nonce, b, nil)
+	_, ew := w.Writer.Write(buf)
+	if ew != nil {
+		return n, ew
+	}
+
+	return n, nil
 }
 
 type reader struct {
@@ -87,7 +102,7 @@ type reader struct {
 	leftover []byte
 }
 
-func newReader(r io.Reader, aead cipher.AEAD) *reader {
+func NewReader(r io.Reader, aead cipher.AEAD) *reader {
 	return &reader{
 		Reader: r,
 		AEAD:   aead,
@@ -112,8 +127,12 @@ func (r *reader) Read(b []byte) (int, error) {
 }
 
 func (r *reader) read() (int, error) {
+	_, err := io.ReadFull(r.Reader, r.nonce)
+	if err != nil {
+		return 0, err
+	}
 	buf := r.buf[:2+r.Overhead()]
-	_, err := io.ReadFull(r.Reader, buf)
+	_, err = io.ReadFull(r.Reader, buf)
 	if err != nil {
 		return 0, err
 	}

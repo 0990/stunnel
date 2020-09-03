@@ -13,14 +13,14 @@ type tcpServer struct {
 	aead cipher.AEAD
 }
 
-func newTCPServer(config TCPConfig, aead cipher.AEAD) *tcpServer {
+func NewTCPServer(config TCPConfig, aead cipher.AEAD) *tcpServer {
 	return &tcpServer{
 		cfg:  config,
 		aead: aead,
 	}
 }
 
-func (p *tcpServer) run() error {
+func (p *tcpServer) Run() error {
 	lis, err := net.Listen("tcp", p.cfg.Listen)
 	if err != nil {
 		return err

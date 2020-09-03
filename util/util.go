@@ -8,7 +8,7 @@ import (
 	"io"
 )
 
-func CreateAESGCMAEAD(key []byte) (cipher.AEAD, error) {
+func CreateAesGcmAead(key []byte) (cipher.AEAD, error) {
 	if len(key) != 32 {
 		return nil, errors.New("key len!=32")
 	}
@@ -24,7 +24,7 @@ func CreateAESGCMAEAD(key []byte) (cipher.AEAD, error) {
 	return aead, nil
 }
 
-func KDF(password string, keyLen int) []byte {
+func StringToAesKey(password string, keyLen int) []byte {
 	var b, prev []byte
 	h := md5.New()
 	for len(b) < keyLen {

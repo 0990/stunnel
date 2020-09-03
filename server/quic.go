@@ -19,14 +19,14 @@ type quicServer struct {
 	aead cipher.AEAD
 }
 
-func newQUICServer(config QUICConfig, aead cipher.AEAD) *quicServer {
+func NewQUICServer(config QUICConfig, aead cipher.AEAD) *quicServer {
 	return &quicServer{
 		cfg:  config,
 		aead: aead,
 	}
 }
 
-func (p *quicServer) run() error {
+func (p *quicServer) Run() error {
 	lis, err := quic.ListenAddr(p.cfg.Listen, generateTLSConfig(), nil)
 	if err != nil {
 		return err
@@ -37,7 +37,6 @@ func (p *quicServer) run() error {
 
 func (p *quicServer) serve(lis quic.Listener) {
 	for {
-
 		sess, err := lis.Accept(context.Background())
 		if err != nil {
 			logrus.WithError(err).Error("quicServer Accept")
@@ -88,6 +87,6 @@ func generateTLSConfig() *tls.Config {
 	}
 	return &tls.Config{
 		Certificates: []tls.Certificate{tlsCert},
-		NextProtos:   []string{"quic-echo-example"},
+		NextProtos:   []string{"quic-stunnel"},
 	}
 }

@@ -14,15 +14,15 @@ type KCPServer struct {
 	aead cipher.AEAD
 }
 
-func newKCPServer(config KCPConfig, aead cipher.AEAD) *KCPServer {
+func NewKCPServer(config KCPConfig, aead cipher.AEAD) *KCPServer {
 	return &KCPServer{
 		cfg:  config,
 		aead: aead,
 	}
 }
 
-func (p *KCPServer) run(config KCPConfig) error {
-	lis, err := kcp.ListenWithOptions(p.cfg.Listen, nil, config.DataShard, config.ParityShard)
+func (p *KCPServer) Run() error {
+	lis, err := kcp.ListenWithOptions(p.cfg.Listen, nil, p.cfg.DataShard, p.cfg.ParityShard)
 	if err != nil {
 		return err
 	}
@@ -66,8 +66,9 @@ func (p *KCPServer) handleConn(conn net.Conn) {
 			return
 		}
 
+		s := &tun.KCPStream{Stream: stream}
 		go func(s tun.Stream) {
 			relayToTarget(s, p.cfg.Remote, p.aead)
-		}(stream)
+		}(s)
 	}
 }
