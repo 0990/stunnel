@@ -7,7 +7,8 @@ import (
 	"time"
 )
 
-const payloadSizeMask = 0x3FFF // 16*1024 - 1
+//const payloadSizeMask = 0x3FFF // 16*1024 - 1
+const payloadSizeMask = 65535
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
@@ -76,7 +77,8 @@ func (w *writer) write(b []byte) (n int64, err error) {
 	//copy(payloadBuf, b)
 
 	n += int64(nr)
-	buf = buf[:w.NonceSize()+2+w.Overhead()+nr+w.Overhead()]
+	end := w.NonceSize() + 2 + w.Overhead() + nr + w.Overhead()
+	buf = buf[:end]
 	//payloadBuf = payloadBuf[:nr]
 	sizeBuf[0], sizeBuf[1] = byte(nr>>8), byte(nr)
 

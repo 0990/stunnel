@@ -9,6 +9,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sirupsen/logrus v1.6.0
 	github.com/xtaci/kcp-go/v5 v5.5.14
-	github.com/xtaci/smux v2.0.1+incompatible
+	github.com/xtaci/smux v1.5.14
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 )

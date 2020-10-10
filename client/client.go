@@ -87,12 +87,13 @@ func (p *client) server(l net.Listener) {
 			logrus.WithError(err).Error("server Accept")
 			return
 		}
+
 		idx := rr % numConn
 		if tuns[idx] == nil || tuns[idx].IsClosed() {
 			tuns[idx] = p.waitCreateTun()
 		}
 		go p.relayToTun(conn, tuns[idx])
-		idx++
+		rr++
 	}
 }
 
@@ -109,6 +110,7 @@ func (p *client) relayToTun(src net.Conn, tun tun.Tun) {
 	defer logrus.Debug("stream closed", "in:", src.RemoteAddr(), "out:", fmt.Sprint(stream.RemoteAddr(), "(", stream.ID(), ")"))
 
 	cipherSess := crypto.NewConn(stream, p.aead)
+
 	go util.Copy(src, cipherSess)
 	util.Copy(cipherSess, src)
 }

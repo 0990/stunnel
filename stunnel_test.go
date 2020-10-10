@@ -42,6 +42,11 @@ func Test_CreateConfig(t *testing.T) {
 			Listen: "0.0.0.0:3000",
 			Remote: ":3001",
 		},
+		RawUDP: client.RawUDPConfig{
+			Listen:  "0.0.0.0:4000",
+			Remote:  ":4001",
+			Timeout: 0,
+		},
 	}
 
 	sCfg := server.Config{
@@ -71,6 +76,11 @@ func Test_CreateConfig(t *testing.T) {
 			Listen: "0.0.0.0:3001",
 			Remote: "",
 		},
+		RawUDP: server.RawUDPConfig{
+			Listen:  "0.0.0.0:4001",
+			Remote:  ":4001",
+			Timeout: 0,
+		},
 	}
 
 	c, _ := json.MarshalIndent(cCfg, "", "   ")
@@ -96,9 +106,9 @@ func Test_KCP(t *testing.T) {
 			DataShard:    30,
 			ParityShard:  15,
 			DSCP:         46,
-			AckNodelay:   false,
-			NoDelay:      0,
-			Interval:     20,
+			AckNodelay:   true,
+			NoDelay:      1,
+			Interval:     10,
 			Resend:       2,
 			NoCongestion: 1,
 			SockBuf:      16777217,
@@ -119,9 +129,9 @@ func Test_KCP(t *testing.T) {
 			DataShard:    30,
 			ParityShard:  15,
 			DSCP:         46,
-			AckNodelay:   false,
-			NoDelay:      0,
-			Interval:     20,
+			AckNodelay:   true,
+			NoDelay:      1,
+			Interval:     10,
 			Resend:       2,
 			NoCongestion: 1,
 			SockBuf:      16777217,
@@ -145,6 +155,8 @@ func Test_KCP(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	time.Sleep(time.Second * 2)
 
 	err = echo(localProxyAddr)
 	if err != nil {
@@ -325,13 +337,17 @@ func echo(clientAddr string) error {
 		return err
 	}
 
-	sendStr := "hello"
-	_, err = conn.Write([]byte(sendStr))
+	//sendStr := "hello"
+	t := time.Now().UnixNano()
+	s := fmt.Sprintf("%v", t)
+
+	fmt.Println("sendTime:", time.Now().UnixNano()/1000000)
+	_, err = conn.Write([]byte(s))
 	if err != nil {
 		return err
 	}
 
-	conn.SetReadDeadline(time.Now().Add(time.Second * 20))
+	//conn.SetReadDeadline(time.Now().Add(time.Second * 20))
 	buf := make([]byte, 65535)
 	n, err := conn.Read(buf)
 	if err != nil {
@@ -340,8 +356,16 @@ func echo(clientAddr string) error {
 
 	retStr := string(buf[0:n])
 
-	if retStr != sendStr {
-		return fmt.Errorf("echo send:%s receive:%s", sendStr, buf[0:n])
+	if retStr != s {
+		return fmt.Errorf("echo send:%s receive:%s", s, buf[0:n])
 	}
+
+	//t, err := strconv.ParseInt(retStr, 10, 64)
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+	fmt.Println("receiveTime:", time.Now().UnixNano()/1000000)
+	latency := (time.Now().UnixNano() - t)
+	fmt.Println("latency:", latency/1000000)
 	return nil
 }

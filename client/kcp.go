@@ -30,7 +30,7 @@ func newKCPTun(config KCPConfig) (tun.Tun, error) {
 	kcpConn.SetMtu(config.MTU)
 	kcpConn.SetACKNoDelay(config.AckNodelay)
 	kcpConn.SetNoDelay(config.NoDelay, config.Interval, config.Resend, config.NoCongestion)
-	kcpConn.SetWindowSize(config.SndWnd, config.Resend)
+	kcpConn.SetWindowSize(config.SndWnd, config.RcvWnd)
 
 	if err := kcpConn.SetDSCP(config.DSCP); err != nil {
 		log.Println("SetDSCP:", err)

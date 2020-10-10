@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/xtaci/kcp-go/v5"
 	"github.com/xtaci/smux"
+	"log"
 	"net"
 )
 
@@ -27,6 +28,18 @@ func (p *KCPServer) Run() error {
 		return err
 	}
 
+	config := p.cfg
+
+	if err := lis.SetDSCP(config.DSCP); err != nil {
+		log.Println("SetDSCP:", err)
+	}
+	if err := lis.SetReadBuffer(config.SockBuf); err != nil {
+		log.Println("SetReadBuffer:", err)
+	}
+	if err := lis.SetWriteBuffer(config.SockBuf); err != nil {
+		log.Println("SetWriteBuffer:", err)
+	}
+
 	go p.serve(lis)
 	return nil
 }
@@ -43,7 +56,7 @@ func (p *KCPServer) serve(lis *kcp.Listener) {
 		conn.SetWriteDelay(false)
 		conn.SetNoDelay(config.NoDelay, config.Interval, config.Resend, config.NoCongestion)
 		conn.SetMtu(config.MTU)
-		conn.SetWindowSize(config.SndWnd, config.Resend)
+		conn.SetWindowSize(config.SndWnd, config.RcvWnd)
 		conn.SetACKNoDelay(config.AckNodelay)
 
 		go p.handleConn(conn)

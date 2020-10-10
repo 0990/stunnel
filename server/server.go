@@ -28,5 +28,4 @@ func relayToTarget(src tun.Stream, targetAddr string, aead cipher.AEAD) {
 	}()
 
 	_, err = io.Copy(target, p3)
-	fmt.Println(err)
 }
