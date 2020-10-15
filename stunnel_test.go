@@ -91,7 +91,7 @@ func Test_CreateConfig(t *testing.T) {
 }
 
 func Test_KCP(t *testing.T) {
-	targetAddr := "127.0.0.1:2000"
+	targetAddr := "127.0.0.1:3000"
 	localProxyAddr := "127.0.0.1:1000"
 
 	cCfg := client.Config{
@@ -178,7 +178,7 @@ func startKCPServer(config server.Config) error {
 }
 
 func Test_QUIC(t *testing.T) {
-	targetAddr := "127.0.0.1:2000"
+	targetAddr := "127.0.0.1:3000"
 	localProxyAddr := "127.0.0.1:1000"
 
 	cCfg := client.Config{
@@ -222,7 +222,7 @@ func Test_QUIC(t *testing.T) {
 }
 
 func Test_TCP(t *testing.T) {
-	targetAddr := "127.0.0.1:2000"
+	targetAddr := "127.0.0.1:3000"
 	localProxyAddr := "127.0.0.1:1000"
 
 	cCfg := client.Config{
@@ -271,7 +271,7 @@ func startClient(typ string, config client.Config) error {
 		return err
 	}
 
-	c, err := client.New(typ, config, aead)
+	c, err := client.NewTunClient(typ, config, aead)
 	if err != nil {
 		return err
 	}
@@ -360,10 +360,6 @@ func echo(clientAddr string) error {
 		return fmt.Errorf("echo send:%s receive:%s", s, buf[0:n])
 	}
 
-	//t, err := strconv.ParseInt(retStr, 10, 64)
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
 	fmt.Println("receiveTime:", time.Now().UnixNano()/1000000)
 	latency := (time.Now().UnixNano() - t)
 	fmt.Println("latency:", latency/1000000)

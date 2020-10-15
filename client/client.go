@@ -1,116 +1,81 @@
 package client
 
 import (
-	"crypto/cipher"
-	"fmt"
-	"github.com/0990/stunnel/crypto"
-	"github.com/0990/stunnel/tun"
 	"github.com/0990/stunnel/util"
 	"github.com/sirupsen/logrus"
-	"net"
-	"time"
 )
 
 type client struct {
-	aead    cipher.AEAD
-	listen  string
-	connNum int32
-	newTun  func() (tun.Tun, error)
+	tunClients   []*tunClient
+	rawUDPClient *rawUDPClient
 }
 
-func New(typ string, cfg Config, aead cipher.AEAD) (*client, error) {
-	var newTun func() (tun.Tun, error)
-	var listen string
-	switch typ {
-	case "kcp":
-		newTun = func() (tun.Tun, error) {
-			return newKCPTun(cfg.KCP)
-		}
-		listen = cfg.KCP.Listen
-	case "quic":
-		newTun = func() (tun.Tun, error) {
-			return newQUICTun(cfg.QUIC)
-		}
-		listen = cfg.QUIC.Listen
-	case "tcp":
-		newTun = func() (tun.Tun, error) {
-			return newTCPTun(cfg.TCP)
-		}
-		listen = cfg.TCP.Listen
-	default:
-		return nil, fmt.Errorf("not support typ:%s", typ)
+func New(config Config) *client {
+	p := &client{}
+
+	aead, err := util.CreateAesGcmAead(util.StringToAesKey(config.AuthKey, 32))
+	if err != nil {
+		logrus.Fatalln(err)
 	}
 
-	return &client{
-		aead:    aead,
-		listen:  listen,
-		newTun:  newTun,
-		connNum: cfg.ConnNum,
-	}, nil
+	if config.KCP.Listen != "" {
+		c, err := NewTunClient("kcp", config, aead)
+		if err != nil {
+			logrus.Fatalln(err)
+		}
+		p.addTunClient(c)
+	}
+
+	if config.QUIC.Listen != "" {
+		c, err := NewTunClient("quic", config, aead)
+		if err != nil {
+			logrus.Fatalln(err)
+		}
+		p.addTunClient(c)
+	}
+
+	if config.TCP.Listen != "" {
+		c, err := NewTunClient("tcp", config, aead)
+		if err != nil {
+			logrus.Fatalln(err)
+		}
+		p.addTunClient(c)
+	}
+
+	if config.RawUDP.Listen != "" {
+		p.rawUDPClient = NewRawUDPClient(config.RawUDP, aead)
+	}
+
+	return p
+}
+
+func (p *client) addTunClient(c *tunClient) {
+	p.tunClients = append(p.tunClients, c)
 }
 
 func (p *client) Run() error {
-	l, err := net.Listen("tcp", p.listen)
-	if err != nil {
-		return err
+	for _, v := range p.tunClients {
+		err := v.Run()
+		if err != nil {
+			return err
+		}
 	}
 
-	go p.server(l)
+	if p.rawUDPClient != nil {
+		err := p.rawUDPClient.Run()
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func (p *client) waitCreateTun() tun.Tun {
-	for {
-		logrus.Info("creating conn....")
-		if conn, err := p.newTun(); err == nil {
-			logrus.Info("creating conn ok")
-			return conn
-		} else {
-			logrus.Println("re-connecting:", err)
-			time.Sleep(time.Second)
-		}
-	}
-}
-
-func (p *client) server(l net.Listener) {
-	numConn := uint16(p.connNum)
-	tuns := make([]tun.Tun, numConn)
-
-	for k := range tuns {
-		tuns[k] = p.waitCreateTun()
+func (p *client) Close() {
+	for _, v := range p.tunClients {
+		v.Close()
 	}
 
-	rr := uint16(0)
-	for {
-		conn, err := l.Accept()
-		if err != nil {
-			logrus.WithError(err).Error("server Accept")
-			return
-		}
-
-		idx := rr % numConn
-		if tuns[idx] == nil || tuns[idx].IsClosed() {
-			tuns[idx] = p.waitCreateTun()
-		}
-		go p.relayToTun(conn, tuns[idx])
-		rr++
+	if p.rawUDPClient != nil {
+		p.rawUDPClient.Close()
 	}
-}
-
-func (p *client) relayToTun(src net.Conn, tun tun.Tun) {
-	defer src.Close()
-	stream, err := tun.OpenStream()
-	if err != nil {
-		logrus.WithError(err).Error("openStream")
-		return
-	}
-	defer stream.Close()
-
-	logrus.Debug("stream opened", "in:", src.RemoteAddr(), "out:", fmt.Sprint(stream.RemoteAddr(), "(", stream.ID(), ")"))
-	defer logrus.Debug("stream closed", "in:", src.RemoteAddr(), "out:", fmt.Sprint(stream.RemoteAddr(), "(", stream.ID(), ")"))
-
-	cipherSess := crypto.NewConn(stream, p.aead)
-
-	go util.Copy(src, cipherSess)
-	util.Copy(cipherSess, src)
 }

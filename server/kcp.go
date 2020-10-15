@@ -10,19 +10,20 @@ import (
 	"net"
 )
 
-type KCPServer struct {
-	cfg  KCPConfig
-	aead cipher.AEAD
+type kcpServer struct {
+	cfg      KCPConfig
+	aead     cipher.AEAD
+	listener *kcp.Listener
 }
 
-func NewKCPServer(config KCPConfig, aead cipher.AEAD) *KCPServer {
-	return &KCPServer{
+func NewKCPServer(config KCPConfig, aead cipher.AEAD) *kcpServer {
+	return &kcpServer{
 		cfg:  config,
 		aead: aead,
 	}
 }
 
-func (p *KCPServer) Run() error {
+func (p *kcpServer) Run() error {
 	lis, err := kcp.ListenWithOptions(p.cfg.Listen, nil, p.cfg.DataShard, p.cfg.ParityShard)
 	if err != nil {
 		return err
@@ -40,14 +41,20 @@ func (p *KCPServer) Run() error {
 		log.Println("SetWriteBuffer:", err)
 	}
 
-	go p.serve(lis)
+	p.listener = lis
+
+	go p.serve()
 	return nil
 }
 
-func (p *KCPServer) serve(lis *kcp.Listener) {
+func (p *kcpServer) Close() error {
+	return p.listener.Close()
+}
+
+func (p *kcpServer) serve() {
 	config := p.cfg
 	for {
-		conn, err := lis.AcceptKCP()
+		conn, err := p.listener.AcceptKCP()
 		if err != nil {
 			logrus.WithError(err).Error("HandleListener Accept")
 			return
@@ -63,7 +70,7 @@ func (p *KCPServer) serve(lis *kcp.Listener) {
 	}
 }
 
-func (p *KCPServer) handleConn(conn net.Conn) {
+func (p *kcpServer) handleConn(conn net.Conn) {
 	smuxConfig := smux.DefaultConfig()
 	smuxConfig.MaxReceiveBuffer = p.cfg.StreamBuf
 	mux, err := smux.Server(conn, smuxConfig)

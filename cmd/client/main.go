@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/0990/stunnel/client"
 	"github.com/0990/stunnel/logconfig"
-	"github.com/0990/stunnel/util"
 	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
@@ -15,7 +14,7 @@ import (
 var confFile = flag.String("c", "stclient.json", "config file")
 
 func main() {
-	logconfig.InitLogrus("stclient", 10, logrus.ErrorLevel)
+	logconfig.InitLogrus("stclient", 10, logrus.WarnLevel)
 
 	flag.Parse()
 
@@ -32,50 +31,10 @@ func main() {
 
 	logrus.Info("config:", config)
 
-	aead, err := util.CreateAesGcmAead(util.StringToAesKey(config.AuthKey, 32))
+	p := client.New(config)
+	err = p.Run()
 	if err != nil {
 		logrus.Fatalln(err)
-	}
-
-	if config.KCP.Listen != "" {
-		c, err := client.New("kcp", config, aead)
-		if err != nil {
-			logrus.Fatalln(err)
-		}
-		err = c.Run()
-		if err != nil {
-			logrus.Fatalln(err)
-		}
-	}
-
-	if config.QUIC.Listen != "" {
-		c, err := client.New("quic", config, aead)
-		if err != nil {
-			logrus.Fatalln(err)
-		}
-		err = c.Run()
-		if err != nil {
-			logrus.Fatalln(err)
-		}
-	}
-
-	if config.TCP.Listen != "" {
-		c, err := client.New("tcp", config, aead)
-		if err != nil {
-			logrus.Fatalln(err)
-		}
-		err = c.Run()
-		if err != nil {
-			logrus.Fatalln(err)
-		}
-	}
-
-	if config.RawUDP.Listen != "" {
-		c := client.NewRawUDP(config.RawUDP, aead)
-		err = c.Run()
-		if err != nil {
-			logrus.Fatalln(err)
-		}
 	}
 
 	c := make(chan os.Signal, 1)

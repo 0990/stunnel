@@ -64,7 +64,7 @@ func startRawUDPClient(cfg client.Config) error {
 	if err != nil {
 		logrus.Fatalln(err)
 	}
-	c := client.NewRawUDP(cfg.RawUDP, aead)
+	c := client.NewRawUDPClient(cfg.RawUDP, aead)
 	return c.Run()
 }
 

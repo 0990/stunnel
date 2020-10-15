@@ -12,19 +12,20 @@ import (
 
 const socketBufSize = 64 * 1024
 
-type RawUDP struct {
-	ahead cipher.AEAD
-	cfg   RawUDPConfig
+type rawUDPClient struct {
+	ahead   cipher.AEAD
+	cfg     RawUDPConfig
+	relayer net.PacketConn
 }
 
-func NewRawUDP(cfg RawUDPConfig, ahead cipher.AEAD) *RawUDP {
-	return &RawUDP{
+func NewRawUDPClient(cfg RawUDPConfig, ahead cipher.AEAD) *rawUDPClient {
+	return &rawUDPClient{
 		cfg:   cfg,
 		ahead: ahead,
 	}
 }
 
-func (p *RawUDP) Run() error {
+func (p *rawUDPClient) Run() error {
 	remoteAddr, err := net.ResolveUDPAddr("udp", p.cfg.Remote)
 	if err != nil {
 		return err
@@ -34,9 +35,15 @@ func (p *RawUDP) Run() error {
 		return err
 	}
 
+	p.relayer = relayer
+
 	timeout := time.Duration(p.cfg.Timeout) * time.Second
 	go runUDPRelayServer(relayer, remoteAddr, p.ahead, timeout)
 	return nil
+}
+
+func (p *rawUDPClient) Close() error {
+	return p.relayer.Close()
 }
 
 //send: client->relayer->sender->remote

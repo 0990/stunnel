@@ -9,8 +9,9 @@ import (
 )
 
 type tcpServer struct {
-	cfg  TCPConfig
-	aead cipher.AEAD
+	cfg      TCPConfig
+	aead     cipher.AEAD
+	listener net.Listener
 }
 
 func NewTCPServer(config TCPConfig, aead cipher.AEAD) *tcpServer {
@@ -25,13 +26,14 @@ func (p *tcpServer) Run() error {
 	if err != nil {
 		return err
 	}
-	go p.serve(lis)
+	p.listener = lis
+	go p.serve()
 	return nil
 }
 
-func (p *tcpServer) serve(lis net.Listener) {
+func (p *tcpServer) serve() {
 	for {
-		conn, err := lis.Accept()
+		conn, err := p.listener.Accept()
 		if err != nil {
 			logrus.WithError(err).Error("HandleListener Accept")
 			return
@@ -58,4 +60,8 @@ func (p *tcpServer) handleConn(conn net.Conn) {
 			relayToTarget(p1, p.cfg.Remote, p.aead)
 		}(s)
 	}
+}
+
+func (p *tcpServer) Close() error {
+	return p.listener.Close()
 }

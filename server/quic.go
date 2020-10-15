@@ -15,8 +15,9 @@ import (
 )
 
 type quicServer struct {
-	cfg  QUICConfig
-	aead cipher.AEAD
+	cfg      QUICConfig
+	aead     cipher.AEAD
+	listener quic.Listener
 }
 
 func NewQUICServer(config QUICConfig, aead cipher.AEAD) *quicServer {
@@ -31,13 +32,14 @@ func (p *quicServer) Run() error {
 	if err != nil {
 		return err
 	}
-	go p.serve(lis)
+	p.listener = lis
+	go p.serve()
 	return nil
 }
 
-func (p *quicServer) serve(lis quic.Listener) {
+func (p *quicServer) serve() {
 	for {
-		sess, err := lis.Accept(context.Background())
+		sess, err := p.listener.Accept(context.Background())
 		if err != nil {
 			logrus.WithError(err).Error("quicServer Accept")
 			return
@@ -60,6 +62,10 @@ func (p *quicServer) handleSession(session quic.Session) {
 			relayToTarget(s, p.cfg.Remote, p.aead)
 		}(s)
 	}
+}
+
+func (p *quicServer) Close() error {
+	return p.listener.Close()
 }
 
 func generateTLSConfig() *tls.Config {
