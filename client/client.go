@@ -5,13 +5,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type client struct {
+type Client struct {
 	tunClients   []*tunClient
 	rawUDPClient *rawUDPClient
 }
 
-func New(config Config) *client {
-	p := &client{}
+func New(config Config) *Client {
+	p := &Client{}
 
 	aead, err := util.CreateAesGcmAead(util.StringToAesKey(config.AuthKey, 32))
 	if err != nil {
@@ -49,11 +49,11 @@ func New(config Config) *client {
 	return p
 }
 
-func (p *client) addTunClient(c *tunClient) {
+func (p *Client) addTunClient(c *tunClient) {
 	p.tunClients = append(p.tunClients, c)
 }
 
-func (p *client) Run() error {
+func (p *Client) Run() error {
 	for _, v := range p.tunClients {
 		err := v.Run()
 		if err != nil {
@@ -70,7 +70,7 @@ func (p *client) Run() error {
 	return nil
 }
 
-func (p *client) Close() {
+func (p *Client) Close() {
 	for _, v := range p.tunClients {
 		v.Close()
 	}
