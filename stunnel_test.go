@@ -14,8 +14,8 @@ import (
 )
 
 func Test_CreateConfig(t *testing.T) {
-	cCfg := client.Config{
-		AuthKey: "abcdefg",
+	cTunCfg := client.TunnelConfig{
+		AuthKey: "123456",
 		ConnNum: 10,
 		KCP: client.KCPConfig{
 			Listen:       "0.0.0.0:1000",
@@ -49,7 +49,12 @@ func Test_CreateConfig(t *testing.T) {
 		},
 	}
 
-	sCfg := server.Config{
+	cCfg := client.Config{
+		LogLevel: "info",
+		Tunnels:  []client.TunnelConfig{cTunCfg},
+	}
+
+	sTunCfg := server.TunnelConfig{
 		AuthKey: "abcdefg",
 		KCP: server.KCPConfig{
 			Listen:       "0.0.0.0:1001",
@@ -83,6 +88,11 @@ func Test_CreateConfig(t *testing.T) {
 		},
 	}
 
+	sCfg := server.Config{
+		LogLevel: "info",
+		Tunnels:  []server.TunnelConfig{sTunCfg},
+	}
+
 	c, _ := json.MarshalIndent(cCfg, "", "   ")
 	ioutil.WriteFile("stclient.json", c, 0644)
 
@@ -94,7 +104,7 @@ func Test_KCP(t *testing.T) {
 	targetAddr := "127.0.0.1:3000"
 	localProxyAddr := "127.0.0.1:1000"
 
-	cCfg := client.Config{
+	cTunCfg := client.TunnelConfig{
 		AuthKey: "abcdefg",
 		ConnNum: 10,
 		KCP: client.KCPConfig{
@@ -118,7 +128,7 @@ func Test_KCP(t *testing.T) {
 		TCP:  client.TCPConfig{},
 	}
 
-	sCfg := server.Config{
+	sCfg := server.TunnelConfig{
 		AuthKey: "abcdefg",
 		KCP: server.KCPConfig{
 			Listen:       "0.0.0.0:1001",
@@ -146,7 +156,7 @@ func Test_KCP(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = startClient("kcp", cCfg)
+	err = startClient("kcp", cTunCfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +174,7 @@ func Test_KCP(t *testing.T) {
 	}
 }
 
-func startKCPServer(config server.Config) error {
+func startKCPServer(config server.TunnelConfig) error {
 	aead, err := util.CreateAesGcmAead(util.StringToAesKey(config.AuthKey, 32))
 	if err != nil {
 		logrus.Fatalln(err)
@@ -181,7 +191,7 @@ func Test_QUIC(t *testing.T) {
 	targetAddr := "127.0.0.1:3000"
 	localProxyAddr := "127.0.0.1:1000"
 
-	cCfg := client.Config{
+	cTunCfg := client.TunnelConfig{
 		AuthKey: "abcdefg",
 		ConnNum: 10,
 		QUIC: client.QUICConfig{
@@ -191,7 +201,7 @@ func Test_QUIC(t *testing.T) {
 		TCP: client.TCPConfig{},
 	}
 
-	sCfg := server.Config{
+	sCfg := server.TunnelConfig{
 		AuthKey: "abcdefg",
 		QUIC: server.QUICConfig{
 			Listen: "0.0.0.0:1001",
@@ -205,7 +215,7 @@ func Test_QUIC(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = startClient("quic", cCfg)
+	err = startClient("quic", cTunCfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -225,7 +235,7 @@ func Test_TCP(t *testing.T) {
 	targetAddr := "127.0.0.1:3000"
 	localProxyAddr := "127.0.0.1:1000"
 
-	cCfg := client.Config{
+	cTunCfg := client.TunnelConfig{
 		AuthKey: "abcdefg",
 		ConnNum: 10,
 		QUIC:    client.QUICConfig{},
@@ -235,7 +245,7 @@ func Test_TCP(t *testing.T) {
 		},
 	}
 
-	sCfg := server.Config{
+	sCfg := server.TunnelConfig{
 		AuthKey: "abcdefg",
 		QUIC:    server.QUICConfig{},
 		TCP: server.TCPConfig{
@@ -244,7 +254,7 @@ func Test_TCP(t *testing.T) {
 		},
 	}
 
-	err := startClient("tcp", cCfg)
+	err := startClient("tcp", cTunCfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -265,7 +275,7 @@ func Test_TCP(t *testing.T) {
 	}
 }
 
-func startClient(typ string, config client.Config) error {
+func startClient(typ string, config client.TunnelConfig) error {
 	aead, err := util.CreateAesGcmAead(util.StringToAesKey(config.AuthKey, 32))
 	if err != nil {
 		return err
@@ -282,7 +292,7 @@ func startClient(typ string, config client.Config) error {
 	return nil
 }
 
-func startQUICServer(config server.Config) error {
+func startQUICServer(config server.TunnelConfig) error {
 	aead, err := util.CreateAesGcmAead(util.StringToAesKey(config.AuthKey, 32))
 	if err != nil {
 		logrus.Fatalln(err)
@@ -295,7 +305,7 @@ func startQUICServer(config server.Config) error {
 	return nil
 }
 
-func startTCPServer(config server.Config) error {
+func startTCPServer(config server.TunnelConfig) error {
 	aead, err := util.CreateAesGcmAead(util.StringToAesKey(config.AuthKey, 32))
 	if err != nil {
 		logrus.Fatalln(err)

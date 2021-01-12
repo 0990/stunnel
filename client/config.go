@@ -1,6 +1,11 @@
 package client
 
 type Config struct {
+	Tunnels  []TunnelConfig `json:"tunnels"`
+	LogLevel string         `json:"log_level"`
+}
+
+type TunnelConfig struct {
 	AuthKey string `json:"authkey"`
 	ConnNum int32  `json:"connnum"` //连接数
 

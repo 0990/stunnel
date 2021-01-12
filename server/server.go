@@ -18,7 +18,7 @@ type server struct {
 	rawUDPServer *rawUDPServer
 }
 
-func New(config Config) *server {
+func New(config TunnelConfig) *server {
 	p := &server{}
 
 	aead, err := util.CreateAesGcmAead(util.StringToAesKey(config.AuthKey, 32))

@@ -15,7 +15,7 @@ func Test_RawUDP(t *testing.T) {
 	targetAddr := "127.0.0.1:2000"
 	localProxyAddr := "127.0.0.1:1000"
 
-	cCfg := client.Config{
+	cTunCfg := client.TunnelConfig{
 		AuthKey: "abcdefg",
 		ConnNum: 10,
 		QUIC:    client.QUICConfig{},
@@ -27,7 +27,7 @@ func Test_RawUDP(t *testing.T) {
 		},
 	}
 
-	sCfg := server.Config{
+	sCfg := server.TunnelConfig{
 		AuthKey: "abcdefg",
 		QUIC:    server.QUICConfig{},
 		TCP:     server.TCPConfig{},
@@ -43,7 +43,7 @@ func Test_RawUDP(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = startRawUDPClient(cCfg)
+	err = startRawUDPClient(cTunCfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func Test_RawUDP(t *testing.T) {
 	}
 }
 
-func startRawUDPClient(cfg client.Config) error {
+func startRawUDPClient(cfg client.TunnelConfig) error {
 	aead, err := util.CreateAesGcmAead(util.StringToAesKey(cfg.AuthKey, 32))
 	if err != nil {
 		logrus.Fatalln(err)
@@ -68,7 +68,7 @@ func startRawUDPClient(cfg client.Config) error {
 	return c.Run()
 }
 
-func startRawUDPServer(cfg server.Config) error {
+func startRawUDPServer(cfg server.TunnelConfig) error {
 	aead, err := util.CreateAesGcmAead(util.StringToAesKey(cfg.AuthKey, 32))
 	if err != nil {
 		logrus.Fatalln(err)

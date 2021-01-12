@@ -14,8 +14,6 @@ import (
 var confFile = flag.String("c", "stclient.json", "config file")
 
 func main() {
-	logconfig.InitLogrus("stclient", 10, logrus.WarnLevel)
-
 	flag.Parse()
 
 	file, err := os.Open(*confFile)
@@ -23,18 +21,31 @@ func main() {
 		logrus.Fatalln(err)
 	}
 
-	var config client.Config
-	err = json.NewDecoder(file).Decode(&config)
+	var cfg client.Config
+	err = json.NewDecoder(file).Decode(&cfg)
 	if err != nil {
 		logrus.Fatalln(err)
 	}
 
-	logrus.Info("config:", config)
+	logrus.Info("config:", cfg)
 
-	p := client.New(config)
-	err = p.Run()
+	if len(cfg.Tunnels) == 0 {
+		logrus.Fatalln("no tunnels")
+	}
+
+	level, err := logrus.ParseLevel(cfg.LogLevel)
 	if err != nil {
 		logrus.Fatalln(err)
+	}
+
+	logconfig.InitLogrus("stclient", 10, level)
+
+	for _, tunCfg := range cfg.Tunnels {
+		p := client.New(tunCfg)
+		err = p.Run()
+		if err != nil {
+			logrus.Fatalln(err)
+		}
 	}
 
 	c := make(chan os.Signal, 1)

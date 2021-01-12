@@ -19,7 +19,7 @@ type tunClient struct {
 	newTun     func() (tun.Tun, error)
 }
 
-func NewTunClient(typ string, cfg Config, aead cipher.AEAD) (*tunClient, error) {
+func NewTunClient(typ string, cfg TunnelConfig, aead cipher.AEAD) (*tunClient, error) {
 	var newTun func() (tun.Tun, error)
 	var listen string
 	switch typ {

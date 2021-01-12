@@ -1,6 +1,11 @@
 package server
 
 type Config struct {
+	Tunnels  []TunnelConfig `json:"tunnels"`
+	LogLevel string         `json:"log_level"`
+}
+
+type TunnelConfig struct {
 	AuthKey string `json:"authkey"`
 
 	KCP    KCPConfig    `json:"kcp"`

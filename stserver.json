@@ -1,0 +1,38 @@
+{
+   "tunnels": [
+      {
+         "authkey": "abcdefg",
+         "kcp": {
+            "listen": "0.0.0.0:1001",
+            "remote": "",
+            "mtu": 1200,
+            "sndwnd": 2048,
+            "rcvwnd": 256,
+            "datashard": 30,
+            "parityshard": 15,
+            "dscp": 46,
+            "acknodelay": false,
+            "nodelay": 0,
+            "interval": 20,
+            "resend": 2,
+            "nc": 1,
+            "sockbuf": 16777217,
+            "streambuf": 4194304
+         },
+         "quic": {
+            "listen": "0.0.0.0:2001",
+            "remote": ""
+         },
+         "tcp": {
+            "listen": "0.0.0.0:3001",
+            "remote": ""
+         },
+         "rawudp": {
+            "listen": "0.0.0.0:4001",
+            "remote": ":4001",
+            "timeout": 0
+         }
+      }
+   ],
+   "log_level": "info"
+}

@@ -10,40 +10,40 @@ type Client struct {
 	rawUDPClient *rawUDPClient
 }
 
-func New(config Config) *Client {
+func New(cfg TunnelConfig) *Client {
 	p := &Client{}
 
-	aead, err := util.CreateAesGcmAead(util.StringToAesKey(config.AuthKey, 32))
+	aead, err := util.CreateAesGcmAead(util.StringToAesKey(cfg.AuthKey, 32))
 	if err != nil {
 		logrus.Fatalln(err)
 	}
 
-	if config.KCP.Listen != "" {
-		c, err := NewTunClient("kcp", config, aead)
+	if cfg.KCP.Listen != "" {
+		c, err := NewTunClient("kcp", cfg, aead)
 		if err != nil {
 			logrus.Fatalln(err)
 		}
 		p.addTunClient(c)
 	}
 
-	if config.QUIC.Listen != "" {
-		c, err := NewTunClient("quic", config, aead)
+	if cfg.QUIC.Listen != "" {
+		c, err := NewTunClient("quic", cfg, aead)
 		if err != nil {
 			logrus.Fatalln(err)
 		}
 		p.addTunClient(c)
 	}
 
-	if config.TCP.Listen != "" {
-		c, err := NewTunClient("tcp", config, aead)
+	if cfg.TCP.Listen != "" {
+		c, err := NewTunClient("tcp", cfg, aead)
 		if err != nil {
 			logrus.Fatalln(err)
 		}
 		p.addTunClient(c)
 	}
 
-	if config.RawUDP.Listen != "" {
-		p.rawUDPClient = NewRawUDPClient(config.RawUDP, aead)
+	if cfg.RawUDP.Listen != "" {
+		p.rawUDPClient = NewRawUDPClient(cfg.RawUDP, aead)
 	}
 
 	return p
