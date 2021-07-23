@@ -95,12 +95,21 @@ func (p *tunClient) server() {
 		}
 
 		idx := rr % numConn
+		now := time.Now()
 		if tuns[idx] == nil || tuns[idx].IsClosed() {
+			printElapse("choose tun", now)
 			tuns[idx] = p.waitCreateTun()
+			printElapse("waitCreateTun", now)
 		}
+
 		go p.relayToTun(conn, tuns[idx])
 		rr++
 	}
+}
+
+func printElapse(title string, t time.Time) {
+	ms := int32(time.Since(t).Milliseconds())
+	logrus.Infof("%s,elapse:%v", title, ms)
 }
 
 func (p *tunClient) relayToTun(src net.Conn, tun tun.Tun) {
