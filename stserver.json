@@ -3,8 +3,8 @@
       {
          "authkey": "abcdefg",
          "kcp": {
-            "listen": "0.0.0.0:1001",
-            "remote": "",
+            "listen": "0.0.0.0:2001",
+            "remote": "127.0.0.1:9999",
             "mtu": 1200,
             "sndwnd": 2048,
             "rcvwnd": 256,
@@ -20,17 +20,17 @@
             "streambuf": 4194304
          },
          "quic": {
-            "listen": "0.0.0.0:2001",
-            "remote": ""
+            "listen": "0.0.0.0:2002",
+            "remote": "127.0.0.1:9999"
          },
          "tcp": {
-            "listen": "0.0.0.0:3001",
-            "remote": ""
+            "listen": "0.0.0.0:2000",
+            "remote": "127.0.0.1:9999"
          },
          "rawudp": {
             "listen": "0.0.0.0:4001",
-            "remote": ":4001",
-            "timeout": 0
+            "remote": "127.0.0.1:9999",
+            "timeout": 120
          }
       }
    ],
