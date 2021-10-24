@@ -3,12 +3,12 @@
 
 ## 使用
 假设远程主机有个服务Server，IP:44.55.66.77 监听端口9999，本地有Client与之非加密通信</br>
-
+![connection](doc/connection.png)<br>
 为了保证数据安全，部署stunnel:<br>
-远程主机部署stserver,监听端口B
-客户端主机部署stclient,监听端口A，将流量加密，传输至44.55.66.77:B
-stserver接收流量后，将流量解密，传送至端口9999
-
+远程主机部署stserver,监听端口B<br>
+客户端主机部署stclient,监听端口A，将流量加密，传输至44.55.66.77:B,
+stserver接收流量后，将流量解密，传送至端口9999<br>
+![connection_with_stunnel](doc/connection_with_stunnel.png)<br>
 现在localhost:A已“伪装”成44.55.66.77:9999服务了，本地Client只需要和localhost:A通信即可<br>
 走在外网的全是加密流量，此时远程主机也不用暴露9999端口，只需要开放端口B
 
