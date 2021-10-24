@@ -13,7 +13,7 @@ stserver接收流量后，将流量解密，传送至端口9999<br>
 走在外网的全是加密流量，此时远程主机也不用暴露9999端口，只需要开放端口B
 
 ### 配置
-假设端口B为2000,端口A为1000，配置如下：<br>
+假设端口端口A为1000，B为2000,配置如下：<br>
 stclient.json:<br>
 ```
 {
@@ -57,9 +57,9 @@ connnum代表保持的连接数
  
  
 ## 高级用法
-[tcp流量支持quic,kcp传输](待补充）<br>
-[udp安全通道配置]（待补充)<br>
-[多通道配置]（待补充)<br>
+[tcp流量支持quic,kcp传输](doc/quic-kcp.md)<br>
+[udp安全通道配置](doc/udp.md)<br>
+[多通道配置](doc/multi_tunnel.md)<br>
 
 ## 其它说明
 tcp流量加密转发，为优化性能，tcp,quic,kcp都使用了多路复用技术<br>
