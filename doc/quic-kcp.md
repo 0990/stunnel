@@ -75,6 +75,6 @@ stclient的kcp本地监听1001，quic的本地监听1002
 
 经测试，kcp能有效的加速网络，但配置也比较复杂，详细内容参见：<br>
 
-[kcp](https://github.com/skywind3000/kcp) 快速可靠的网络协议<br>
-[kcptun](https://github.com/xtaci/kcptun) 基于 kcp-go做的高速远程端口转发 <br>
+- [kcp](https://github.com/skywind3000/kcp) 快速可靠的网络协议<br>
+- [kcptun](https://github.com/xtaci/kcptun) 基于 kcp-go做的高速远程端口转发 <br>
 

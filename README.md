@@ -1,5 +1,5 @@
 # stunnel
-加密安全通道，功能类似kcptun,将非加密流量转成加密流量,包含两个需要配合使用的程序：stclient,stserver
+加密安全通道，功能类似[kcptun](https://github.com/xtaci/kcptun),将非加密流量转成加密流量,包含两个配合使用的程序：stclient,stserver
 
 ## 使用
 假设远程主机有个服务Server，IP:44.55.66.77 监听端口9999，本地有Client与之非加密通信</br>
