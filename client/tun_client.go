@@ -109,7 +109,7 @@ func (p *tunClient) server() {
 
 func printElapse(title string, t time.Time) {
 	ms := int32(time.Since(t).Milliseconds())
-	logrus.Infof("%s,elapse:%v", title, ms)
+	logrus.Debugf("%s,elapse:%v", title, ms)
 }
 
 func (p *tunClient) relayToTun(src net.Conn, tun tun.Tun) {
