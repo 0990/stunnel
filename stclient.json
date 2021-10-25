@@ -1,11 +1,11 @@
 {
    "tunnels": [
       {
-         "authkey": "123456",
+         "authkey": "abcdefg",
          "connnum": 10,
          "kcp": {
-            "listen": "0.0.0.0:1000",
-            "remote": ":1001",
+            "listen": "0.0.0.0:1001",
+            "remote": "44.55.66.77:2001",
             "mtu": 1200,
             "sndwnd": 256,
             "rcvwnd": 2048,
@@ -21,17 +21,17 @@
             "streambuf": 4194304
          },
          "quic": {
-            "listen": "0.0.0.0:2000",
-            "remote": ":2001"
+            "listen": "0.0.0.0:1002",
+            "remote": "44.55.66.77:2002"
          },
          "tcp": {
-            "listen": "0.0.0.0:3000",
-            "remote": ":3001"
+            "listen": "0.0.0.0:1000",
+            "remote": "44.55.66.77:2000"
          },
          "rawudp": {
             "listen": "0.0.0.0:4000",
-            "remote": ":4001",
-            "timeout": 0
+            "remote": "44.55.66.77:4001",
+            "timeout": 120
          }
       }
    ],
