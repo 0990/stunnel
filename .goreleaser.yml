@@ -18,7 +18,7 @@ builds:
     - CGO_ENABLED=0
 -
   id: "stserver"
-  main: ./cmd/client/main.go
+  main: ./cmd/server/main.go
   binary: "stserver"
   goos:
     - linux
@@ -33,6 +33,9 @@ archives:
     windows: Windows
     386: i386
     amd64: x86_64
+  format_overrides:
+    - goos: windows
+      format: zip
   files:
     - stclient.json
     - stserver.json
