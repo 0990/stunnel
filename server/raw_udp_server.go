@@ -10,6 +10,7 @@ import (
 )
 
 const socketBufSize = 64 * 1024
+const DefaultRawUDPTimeout = 30 * time.Second
 
 type rawUDPServer struct {
 	ahead   cipher.AEAD
@@ -34,7 +35,11 @@ func (p *rawUDPServer) Run() error {
 	}
 
 	p.relayer = relayer
+
 	timeout := time.Duration(p.cfg.Timeout) * time.Second
+	if timeout <= 0 {
+		timeout = DefaultRawUDPTimeout
+	}
 	go runUDPRelayServer(relayer, remoteAddr, p.ahead, timeout)
 	return nil
 }
