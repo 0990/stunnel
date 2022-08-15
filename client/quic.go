@@ -8,11 +8,11 @@ import (
 )
 
 type QUICTun struct {
-	quic.Session
+	quic.Connection
 }
 
 func (p *QUICTun) OpenStream() (tun.Stream, error) {
-	stream, err := p.Session.OpenStream()
+	stream, err := p.Connection.OpenStream()
 	return &tun.QUICStream{Stream: stream}, err
 }
 
@@ -29,5 +29,5 @@ func newQUICTun(config QUICConfig) (tun.Tun, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &QUICTun{Session: session}, nil
+	return &QUICTun{Connection: session}, nil
 }
