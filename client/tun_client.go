@@ -91,6 +91,7 @@ func (p *tunClient) server() {
 		conn, err := p.listener.Accept()
 		if err != nil {
 			logrus.WithError(err).Error("server Accept")
+			panic(err)
 			return
 		}
 

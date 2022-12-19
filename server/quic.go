@@ -9,7 +9,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"github.com/0990/stunnel/tun"
-	"github.com/lucas-clemente/quic-go"
 	"github.com/sirupsen/logrus"
 	"math/big"
 )
@@ -42,6 +41,7 @@ func (p *quicServer) serve() {
 		sess, err := p.listener.Accept(context.Background())
 		if err != nil {
 			logrus.WithError(err).Error("quicServer Accept")
+			panic(err)
 			return
 		}
 		go p.handleSession(sess)
