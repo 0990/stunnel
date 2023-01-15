@@ -9,8 +9,11 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"github.com/0990/stunnel/tun"
+	"github.com/lucas-clemente/quic-go"
 	"github.com/sirupsen/logrus"
 	"math/big"
+	"net"
+	"time"
 )
 
 type quicServer struct {
@@ -37,11 +40,24 @@ func (p *quicServer) Run() error {
 }
 
 func (p *quicServer) serve() {
+	var tempDelay time.Duration
 	for {
 		sess, err := p.listener.Accept(context.Background())
 		if err != nil {
 			logrus.WithError(err).Error("quicServer Accept")
-			panic(err)
+			if ne, ok := err.(*net.OpError); ok && ne.Temporary() {
+				if tempDelay == 0 {
+					tempDelay = 5 * time.Millisecond
+				} else {
+					tempDelay *= 2
+				}
+				if max := 1 * time.Second; tempDelay > max {
+					tempDelay = max
+				}
+				logrus.Errorf("http: Accept error: %v; retrying in %v", err, tempDelay)
+				time.Sleep(tempDelay)
+				continue
+			}
 			return
 		}
 		go p.handleSession(sess)

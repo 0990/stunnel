@@ -8,6 +8,7 @@ import (
 	"github.com/xtaci/smux"
 	"log"
 	"net"
+	"time"
 )
 
 type kcpServer struct {
@@ -53,10 +54,24 @@ func (p *kcpServer) Close() error {
 
 func (p *kcpServer) serve() {
 	config := p.cfg
+	var tempDelay time.Duration
 	for {
 		conn, err := p.listener.AcceptKCP()
 		if err != nil {
 			logrus.WithError(err).Error("HandleListener Accept")
+			if ne, ok := err.(*net.OpError); ok && ne.Temporary() {
+				if tempDelay == 0 {
+					tempDelay = 5 * time.Millisecond
+				} else {
+					tempDelay *= 2
+				}
+				if max := 1 * time.Second; tempDelay > max {
+					tempDelay = max
+				}
+				logrus.Errorf("http: Accept error: %v; retrying in %v", err, tempDelay)
+				time.Sleep(tempDelay)
+				continue
+			}
 			return
 		}
 		conn.SetStreamMode(true)

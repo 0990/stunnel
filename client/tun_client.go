@@ -85,13 +85,25 @@ func (p *tunClient) server() {
 	for k := range tuns {
 		tuns[k] = p.waitCreateTun()
 	}
-
+	var tempDelay time.Duration
 	rr := uint16(0)
 	for {
 		conn, err := p.listener.Accept()
 		if err != nil {
 			logrus.WithError(err).Error("server Accept")
-			panic(err)
+			if ne, ok := err.(*net.OpError); ok && ne.Temporary() {
+				if tempDelay == 0 {
+					tempDelay = 5 * time.Millisecond
+				} else {
+					tempDelay *= 2
+				}
+				if max := 1 * time.Second; tempDelay > max {
+					tempDelay = max
+				}
+				logrus.Errorf("http: Accept error: %v; retrying in %v", err, tempDelay)
+				time.Sleep(tempDelay)
+				continue
+			}
 			return
 		}
 
