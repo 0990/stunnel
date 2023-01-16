@@ -7,6 +7,8 @@ import (
 	"github.com/0990/stunnel/client"
 	"github.com/0990/stunnel/logconfig"
 	"github.com/sirupsen/logrus"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 )
@@ -36,6 +38,15 @@ func main() {
 	level, err := logrus.ParseLevel(cfg.LogLevel)
 	if err != nil {
 		logrus.Fatalln(err)
+	}
+
+	if cfg.PProfPort > 0 {
+		go func() {
+			err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", cfg.PProfPort), nil)
+			if err != nil {
+				logrus.Fatalln(err)
+			}
+		}()
 	}
 
 	logconfig.InitLogrus("stclient", 10, level)

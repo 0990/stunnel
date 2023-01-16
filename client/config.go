@@ -1,8 +1,9 @@
 package client
 
 type Config struct {
-	Tunnels  []TunnelConfig `json:"tunnels"`
-	LogLevel string         `json:"log_level"`
+	Tunnels   []TunnelConfig `json:"tunnels"`
+	LogLevel  string         `json:"log_level"`
+	PProfPort int32          `json:"pprof_port"`
 }
 
 type TunnelConfig struct {
